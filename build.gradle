@@ -1,0 +1,62 @@
+buildscript {
+    ext.kotlin_version = '1.2.71'
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.cloud.tools:appengine-gradle-plugin:2.0.0-rc3'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+repositories {
+    maven {
+        url 'https://maven-central.storage.googleapis.com'
+    }
+    jcenter()
+    mavenCentral()
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'war'
+apply plugin: 'com.google.cloud.tools.appengine-standard'
+
+dependencies {
+    providedCompile group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile 'com.google.cloud:google-cloud-datastore:1.14.0'
+    compile 'com.squareup.moshi:moshi:1.5.0'
+    compile 'com.squareup.moshi:moshi-kotlin:1.5.0'
+}
+
+appengine {
+    tools {
+        cloudSdkHome = "/home/martin/google-cloud-sdk"
+    }
+    deploy {
+        projectId = 'GCLOUD_CONFIG'
+        version = 'GCLOUD_CONFIG'
+        stopPreviousVersion = true
+        promote = true
+    }
+}
+
+group = 'net.mbonnin.googlePlayToSlack'
+version = '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
