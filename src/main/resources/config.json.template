@@ -1,0 +1,4 @@
+{
+  "packageName": "com.company.app",
+  "incomingWebHook": "https://hooks.slack.com/services/SOME_STUFF"
+}
