@@ -7,9 +7,13 @@ import com.google.api.client.util.PemReader
 import com.google.api.client.util.SecurityUtils
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import net.mbonnin.appengine.DataStore.KEY_APPLE
+import net.mbonnin.appengine.DataStore.KEY_GOOGLE
 import okio.Okio
 import java.io.StringReader
+import java.lang.Exception
 import java.security.spec.PKCS8EncodedKeySpec
+import java.util.*
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -20,7 +24,7 @@ class MainServlet : HttpServlet() {
 
     private val mapAdapter by lazy {
         val type = Types.newParameterizedType(Map::class.java, String::class.java, String::class.java)
-         moshi.adapter<Map<String, String>>(type)
+        moshi.adapter<Map<String, String>>(type)
     }
 
     fun resourceAsMap(path: String): Map<String, String>? {
@@ -34,30 +38,19 @@ class MainServlet : HttpServlet() {
         }
 
     }
+
     fun config(): Config? {
-        val map = resourceAsMap("/config.json")
-        if (map == null) {
+        val inputStream = this::class.java.getResourceAsStream("/config.json")
+        if (inputStream == null) {
             return null
         }
-        val packageName = map.get("packageName")
-        val incomingWebHook = map.get("incomingWebHook")
-
-        if (packageName != null && incomingWebHook != null) {
-            return Config(packageName, incomingWebHook)
-        } else {
-            return null
+        val source = Okio.buffer(Okio.source(inputStream))
+        return source.use {
+            moshi.adapter(Config::class.java).fromJson(it)!!
         }
     }
 
-    override fun service(req: HttpServletRequest, resp: HttpServletResponse) {
-        System.out.println("service=${req.servletPath} pathInfo=${req.pathInfo}")
-
-        val config = config()
-        if (config == null) {
-            resp.sendError(500)
-            resp.writer.write("Cannot find config, make sure you add a config.json file in your resources")
-            return
-        }
+    private fun sendGoogle(resp: HttpServletResponse, packageName: String, incomingWebHook: String) {
         val map = resourceAsMap("/secret.json")
         if (map == null) {
             resp.sendError(500)
@@ -102,7 +95,7 @@ class MainServlet : HttpServlet() {
         }
         accessToken = credential.accessToken
 
-        val reviews = GooglePlayApi.getReviews(accessToken, config.packageName)
+        val reviews = GooglePlayApi.getReviews(accessToken, packageName)
         if (reviews == null) {
             resp.sendError(500)
             System.out.println("cannot get reviews")
@@ -110,7 +103,7 @@ class MainServlet : HttpServlet() {
             return
         }
 
-        val lastSeconds = DataStore.readSeconds() ?: 0L
+        val lastSeconds = DataStore.readSeconds(KEY_GOOGLE) ?: 0L
         var maxSeconds = 0L
         System.out.println("lastSeconds=$lastSeconds")
 
@@ -137,18 +130,83 @@ class MainServlet : HttpServlet() {
                     device = userComment.device,
                     originalText = userComment.text,
                     accessToken = accessToken,
-                    seconds = userComment.lastModified.seconds)
+                    seconds = userComment.lastModified.seconds,
+                    channel = "android-reviews")
                     .build()
-            Slack.sendMessage(message, config.incomingWebHook)
+            Slack.sendMessage(message, incomingWebHook)
         }
 
         if (maxSeconds > 0) {
             System.out.println("maxSeconds=$maxSeconds")
-            DataStore.writeSeconds(maxSeconds)
+            DataStore.writeSeconds(KEY_GOOGLE, maxSeconds)
         }
+    }
+
+    override fun service(req: HttpServletRequest, resp: HttpServletResponse) {
+        System.out.println("service=${req.servletPath} pathInfo=${req.pathInfo}")
+
+        val config = config()
+        if (config == null) {
+            resp.sendError(500)
+            resp.writer.write("Cannot find config, make sure you add a config.json file in your resources")
+            return
+        }
+
+        sendGoogle(resp, config.packageName, config.incomingWebHook)
+        sendApple(resp, config.itunesAppId, config.incomingWebHook)
 
         resp.status = 200
         resp.writer.write("Hello World.")
+    }
+
+    companion object {
+        // resp is optional so we can run this in unit tests
+        fun sendApple(resp: HttpServletResponse?, itunesAppId: String, incomingWebHook: String) {
+            val reviews = Itunes.getReviews(itunesAppId)
+            if (reviews == null) {
+                resp?.sendError(500)
+                System.out.println("cannot get itunes reviews")
+                resp?.writer?.write("Cannot get itunes reviews")
+                return
+            }
+
+            val lastId = try {
+                DataStore.readSeconds(KEY_APPLE) ?: 0L
+            } catch (e: Exception) {
+                // in unit tests
+                0L
+            }
+            var maxId = 0L
+            System.out.println("lastId=$lastId")
+
+            for (review in reviews.sortedBy { it.id }) { // start with the last comment first
+                if (review.id <= lastId) {
+                    continue
+                }
+
+                if (review.id > maxId) {
+                    maxId = review.id
+                }
+
+                val message = SlackMessageBuilder(starRating = review.rating.toInt(),
+                        userName = review.author,
+                        appVersion = review.version,
+                        originalText = "${review.title}\n${review.content}",
+                        seconds = Date().time / 1000,
+                        channel = "ios-reviews")
+                        .build()
+                Slack.sendMessage(message, incomingWebHook)
+            }
+
+            if (maxId > 0) {
+                System.out.println("maxId=$maxId")
+                try {
+                    DataStore.writeSeconds(KEY_APPLE, maxId)
+                } catch (e: Exception) {
+                    //
+                }
+            }
+        }
     }
 }
 

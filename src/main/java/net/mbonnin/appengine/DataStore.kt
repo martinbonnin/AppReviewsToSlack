@@ -6,10 +6,11 @@ import com.google.cloud.datastore.Entity
 object DataStore {
     val datastore = DatastoreOptions.getDefaultInstance().service
     val keyFactory = datastore.newKeyFactory().setKind("date")
-    val key = keyFactory.newKey("last")
+    val KEY_GOOGLE = "last"
+    val KEY_APPLE = "last_apple"
 
-    fun readSeconds(): Long? {
-        val entity = datastore.get(key)
+    fun readSeconds(key: String): Long? {
+        val entity = datastore.get(keyFactory.newKey("key"))
         if (entity == null) {
             System.out.println("cannot read seconds")
             return null
@@ -18,8 +19,8 @@ object DataStore {
         return entity.getLong("seconds")
     }
 
-    fun writeSeconds(seconds: Long) {
-        val entity = Entity.newBuilder(key)
+    fun writeSeconds(key: String, seconds: Long) {
+        val entity = Entity.newBuilder(keyFactory.newKey("key"))
                 .set("seconds", seconds)
                 .build()
 

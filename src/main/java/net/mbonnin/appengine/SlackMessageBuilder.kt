@@ -7,14 +7,15 @@ import java.lang.Exception
 import java.net.URLEncoder
 
 class SlackMessageBuilder(val starRating: Int,
-                          val language: String?,
+                          val language: String? = null,
                           val userName: String?,
                           val appVersion: String?,
-                          val apiLevel: Int?,
-                          val device: String?,
+                          val apiLevel: Int? = null,
+                          val device: String? = null,
                           val originalText: String,
                           val seconds: Long,
-                          val accessToken: String) {
+                          val accessToken: String? = null,
+                          val channel: String) {
 
     private fun username(): String {
         if (!userName.isNullOrBlank()) {
@@ -82,6 +83,7 @@ class SlackMessageBuilder(val starRating: Int,
 
         return mapOf(
                 "text" to text(),
+                "channel" to channel,
                 "attachments" to attachments,
                 "icon_emoji" to ":hedgehog:",
                 "username" to "ReviewBot"

@@ -1,3 +1,6 @@
 package net.mbonnin.appengine
 
-data class Config(val packageName: String, val incomingWebHook: String)
+import com.squareup.moshi.JsonClass
+
+@JsonClass(generateAdapter = true)
+data class Config(val packageName: String, val incomingWebHook: String, val itunesAppId: String)
