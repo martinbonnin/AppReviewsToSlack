@@ -10,7 +10,7 @@ object DataStore {
     val KEY_APPLE = "last_apple"
 
     fun readSeconds(key: String): Long? {
-        val entity = datastore.get(keyFactory.newKey("key"))
+        val entity = datastore.get(keyFactory.newKey(key))
         if (entity == null) {
             System.out.println("cannot read seconds")
             return null
@@ -20,7 +20,7 @@ object DataStore {
     }
 
     fun writeSeconds(key: String, seconds: Long) {
-        val entity = Entity.newBuilder(keyFactory.newKey("key"))
+        val entity = Entity.newBuilder(keyFactory.newKey(key))
                 .set("seconds", seconds)
                 .build()
 

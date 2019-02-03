@@ -60,15 +60,11 @@ class MainServlet : HttpServlet() {
 
         val email = map["client_email"]
         if (email == null) {
-            resp.sendError(500)
-            resp.writer.write("Cannot find client_email")
-            return
+            throw(Exception("Cannot find client_email"))
         }
         val privateKey = map["private_key"]
         if (privateKey == null) {
-            resp.sendError(500)
-            resp.writer.write("Cannot find private_key")
-            return
+            throw(Exception("Cannot find private_key"))
         }
 
         val bytes = PemReader.readFirstSectionAndClose(StringReader(privateKey), "PRIVATE KEY").base64DecodedBytes
@@ -88,19 +84,14 @@ class MainServlet : HttpServlet() {
         if (accessToken == null) {
             val success = credential.refreshToken()
             if (!success) {
-                resp.sendError(500)
-                resp.writer.write("Cannot refresh token")
-                return
+                throw(Exception("Cannot refresh token"))
             }
         }
         accessToken = credential.accessToken
 
         val reviews = GooglePlayApi.getReviews(accessToken, packageName)
         if (reviews == null) {
-            resp.sendError(500)
-            System.out.println("cannot get reviews")
-            resp.writer.write("Cannot get reviews")
-            return
+            throw(Exception("Cannot get google reviews"))
         }
 
         val lastSeconds = DataStore.readSeconds(KEY_GOOGLE) ?: 0L
@@ -147,9 +138,7 @@ class MainServlet : HttpServlet() {
 
         val config = config()
         if (config == null) {
-            resp.sendError(500)
-            resp.writer.write("Cannot find config, make sure you add a config.json file in your resources")
-            return
+            throw(Exception("Cannot get config"))
         }
 
         sendGoogle(resp, config.packageName, config.incomingWebHook)
@@ -164,10 +153,7 @@ class MainServlet : HttpServlet() {
         fun sendApple(resp: HttpServletResponse?, itunesAppId: String, incomingWebHook: String) {
             val reviews = Itunes.getReviews(itunesAppId)
             if (reviews == null) {
-                resp?.sendError(500)
-                System.out.println("cannot get itunes reviews")
-                resp?.writer?.write("Cannot get itunes reviews")
-                return
+                throw(Exception("Cannot get apple reviews"))
             }
 
             val lastId = try {
@@ -193,6 +179,7 @@ class MainServlet : HttpServlet() {
                         appVersion = review.version,
                         originalText = "${review.title}\n${review.content}",
                         seconds = Date().time / 1000,
+                        language = review.language,
                         channel = "ios-reviews")
                         .build()
                 Slack.sendMessage(message, incomingWebHook)

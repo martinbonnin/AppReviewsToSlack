@@ -2,6 +2,7 @@ package net.mbonnin.appengine
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import java.lang.Exception
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -11,10 +12,158 @@ object Itunes {
                       val rating: String,
                       val title: String,
                       val content: String,
-                      val id: Long)
+                      val id: Long,
+                      val language: String)
+
+    val countries = arrayOf(
+            "DZ",
+            "AO",
+            "AI",
+            "AG",
+            "AR",
+            "AM",
+            "AU",
+            "AT",
+            "AZ",
+            "BH",
+            "BD",
+            "BB",
+            "BY",
+            "BE",
+            "BZ",
+            "BM",
+            "BO",
+            "BW",
+            "BR",
+            "VG",
+            "BN",
+            "BG",
+            "CA",
+            "KY",
+            "CL",
+            "CN",
+            "CO",
+            "CR",
+            "CI",
+            "HR",
+            "CY",
+            "CZ",
+            "DK",
+            "DM",
+            "DO",
+            "EC",
+            "EG",
+            "SV",
+            "EE",
+            "FI",
+            "FR",
+            "DE",
+            "GH",
+            "GR",
+            "GD",
+            "GT",
+            "GY",
+            "HN",
+            "HK",
+            "HU",
+            "IS",
+            "IN",
+            "ID",
+            "IE",
+            "IL",
+            "IT",
+            "JM",
+            "JP",
+            "JO",
+            "KZ",
+            "KE",
+            "KR",
+            "KW",
+            "LV",
+            "LB",
+            "LI",
+            "LT",
+            "LU",
+            "MO",
+            "MK",
+            "MG",
+            "MY",
+            "MV",
+            "ML",
+            "MT",
+            "MU",
+            "MX",
+            "MD",
+            "MS",
+            "NP",
+            "NL",
+            "NZ",
+            "NI",
+            "NE",
+            "NG",
+            "NO",
+            "OM",
+            "PK",
+            "PA",
+            "PY",
+            "PE",
+            "PH",
+            "PL",
+            "PT",
+            "QA",
+            "RO",
+            "RU",
+            "SA",
+            "SN",
+            "RS",
+            "SG",
+            "SK",
+            "SI",
+            "ZA",
+            "ES",
+            "LK",
+            "KN",
+            "LC",
+            "VC",
+            "SR",
+            "SE",
+            "CH",
+            "TW",
+            "TZ",
+            "TH",
+            "BS",
+            "TT",
+            "TN",
+            "TR",
+            "TC",
+            "UG",
+            "GB",
+            "UA",
+            "AE",
+            "UY",
+            "US",
+            "UZ",
+            "VE",
+            "VN",
+            "YE"
+    )
 
     fun getReviews(appId: String): List<Review>? {
-        val url = URL("https://itunes.apple.com/us/rss/customerreviews/id=${appId}/sortBy=mostRecent/json")
+        val list = mutableListOf<Review>()
+
+        for (country in countries) {
+            Itunes.getReviews(appId, country)?.let { list.addAll(it) }
+        }
+        return if (list.size > 50) {
+            list.sortedBy { it.id }.takeLast(50)
+        } else {
+            list
+        }
+    }
+
+    fun getReviews(appId: String, country: String): List<Review>? {
+        val itunesUrl = "https://itunes.apple.com/${country.toLowerCase()}/rss/customerreviews/id=${appId}/sortBy=mostRecent/json"
+        val url = URL(itunesUrl)
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
         connection.doInput = true
@@ -34,19 +183,31 @@ object Itunes {
         val contents = connection.inputStream.bufferedReader().readText()
         val response = adapter.fromJson(contents)
 
-        val feed = response!!.getObject("feed")
-        val entry = feed.getList("entry")
+        try {
+            val feed = response!!.getObject("feed")
+            val entry = feed.getList("entry")
 
-        return entry.map {
-            Review(
-                    author = it.getObject("author").getObject("name").getString("label"),
-                    version = it.getObject("im:version").getString("label"),
-                    rating = it.getObject("im:rating").getString("label"),
-                    title = it.getObject("title").getString("label"),
-                    content = it.getObject("content").getString("label"),
-                    id = it.getObject("id").getString("label").toLong()
-            )
+            val language = when(country) {
+                "US", "GB" -> "en_${country.toLowerCase()}"
+                else -> "zz_${country.toLowerCase()}" // use zz for language and hope google translate can do the magic
+            }
+            return entry.map {
+                Review(
+                        author = it.getObject("author").getObject("name").getString("label"),
+                        version = it.getObject("im:version").getString("label"),
+                        rating = it.getObject("im:rating").getString("label"),
+                        title = it.getObject("title").getString("label"),
+                        content = it.getObject("content").getString("label"),
+                        id = it.getObject("id").getString("label").toLong(),
+                        language = language
+                )
+            }
+        } catch (e: Exception) {
+            System.err.println("Error processing $itunesUrl")
+            //e.printStackTrace()
+            return null
         }
+
     }
 }
 

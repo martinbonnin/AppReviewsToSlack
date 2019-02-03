@@ -7,7 +7,7 @@ import java.lang.Exception
 import java.net.URLEncoder
 
 class SlackMessageBuilder(val starRating: Int,
-                          val language: String? = null,
+                          val language: String? = null, // in the form en_us
                           val userName: String?,
                           val appVersion: String?,
                           val apiLevel: Int? = null,
