@@ -1,13 +1,13 @@
-# GooglePlayToSlack
+# AppReviewsToSlack
 
-Uses the Google Play developer API to send your Google Play reviews to an incoming slack webhook.
+Uses the Google Play developer API and Ituenes API to send your reviews to an incoming slack webhook.
 
 Compared to existing 3rd party services that crawl the google play, it can:
 
 * Get the versionCode, osVersion and device of the review...
 * Without exposing your google play account to third parties
 
-It does so using the appengine, Google Play, Translate and DataStore APIs so you'll need a Google Cloud account with billing enabled.
+It does so using the appengine, Translate and DataStore APIs and you'll need a Google Cloud account with billing enabled.
 Everything should largely fit in the free tier except for Google Translate that has no free tier so you'll likely end up paying a few cents every month.
 
 ![screenshot](screenshot.png)
