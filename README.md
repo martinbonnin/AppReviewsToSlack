@@ -1,6 +1,6 @@
 # AppReviewsToSlack
 
-Uses the Google Play developer API and Ituenes API to send your reviews to an incoming slack webhook.
+Uses the Google Play developer API and Itunes API to send your reviews to an incoming slack webhook.
 
 Compared to existing 3rd party services that crawl the google play, it can:
 
