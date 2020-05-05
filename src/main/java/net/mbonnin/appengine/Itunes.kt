@@ -26,7 +26,7 @@ object Itunes {
             "AT",
             "AZ",
             "BH",
-            "BD",
+            //"BD",
             //"BB",
             //"BY",
             "BE",
@@ -81,7 +81,7 @@ object Itunes {
             "KW",
             //"LV",
             "LB",
-            "LI",
+            //"LI",
             //"LT",
             "LU",
             "MO",
@@ -172,8 +172,8 @@ object Itunes {
 
         val status = connection.responseCode
         if (status != HttpURLConnection.HTTP_OK) {
-            val error = connection.inputStream.bufferedReader().readText()
-            System.out.println("cannot get reviews: $error")
+            val error = connection.errorStream?.bufferedReader()?.readText()
+            System.out.println("$url: cannot get reviews: $error")
             return null
         }
 
@@ -185,8 +185,12 @@ object Itunes {
 
         try {
             val feed = response!!.getObject("feed")
-            val entry = feed.getList("entry")
+            val entry = feed.getListOrNull("entry")
 
+            if (entry == null) {
+                println("no entry for $country")
+                return null
+            }
             val language = when(country) {
                 "US", "GB" -> "en_${country.toLowerCase()}"
                 else -> "zz_${country.toLowerCase()}" // use zz for language and hope google translate can do the magic
@@ -204,7 +208,7 @@ object Itunes {
             }
         } catch (e: Exception) {
             System.err.println("Error processing $itunesUrl")
-            //e.printStackTrace()
+            e.printStackTrace()
             return null
         }
 
@@ -217,6 +221,10 @@ fun <K, V> Map<K, V>.getObject(key: K): Map<String, Any> {
 
 fun <K, V> Map<K, V>.getList(key: K): List<Map<String, Any>> {
     return get(key) as List<Map<String, Any>>
+}
+
+fun <K, V> Map<K, V>.getListOrNull(key: K): List<Map<String, Any>>? {
+    return get(key) as List<Map<String, Any>>?
 }
 
 fun <K, V> Map<K, V>.getString(key: K): String {
