@@ -35,9 +35,6 @@ dependencies {
 }
 
 configure<com.google.cloud.tools.gradle.appengine.standard.AppEngineStandardExtension> {
-    tools {
-        setCloudSdkHome("/Users/m.bonnin/dev/google-cloud-sdk")
-    }
     deploy {
         projectId = "api-8968624424481748993-986289"
         version = "GCLOUD_CONFIG"
