@@ -94,18 +94,23 @@ class MainServlet : HttpServlet() {
             throw(Exception("Cannot get google reviews"))
         }
 
+        if (reviews.isEmpty()) {
+            return
+        }
+
         val lastSeconds = DataStore.readSeconds(KEY_GOOGLE) ?: 0L
         var maxSeconds = 0L
         System.out.println("lastSeconds=$lastSeconds")
 
-        for (review in reviews.reversed()) { // start with the last comment first
+        reviews.reversed() // start with the last comment first
+                .forEach { review ->
             val userComment = review.comments.firstOrNull()?.userComment
             if (userComment == null) {
-                continue
+                return@forEach
             }
 
             if (userComment.lastModified.seconds <= lastSeconds) {
-                continue
+                return@forEach
             }
 
             if (userComment.lastModified.seconds > maxSeconds) {
@@ -159,15 +164,20 @@ class MainServlet : HttpServlet() {
             val lastId = try {
                 DataStore.readSeconds(KEY_APPLE) ?: 0L
             } catch (e: Exception) {
-                // in unit tests
+                e.printStackTrace()
                 0L
             }
             var maxId = 0L
             System.out.println("lastId=$lastId")
 
-            for (review in reviews.sortedBy { it.id }) { // start with the last comment first
+            if (reviews.isEmpty()) {
+                return
+            }
+
+            reviews.sortedBy { it.id } // start with the last comment first
+                    .forEach {  review ->
                 if (review.id <= lastId) {
-                    continue
+                    return@forEach
                 }
 
                 if (review.id > maxId) {

@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.google.cloud.tools:appengine-gradle-plugin:2.0.0-rc3")
+        classpath("com.google.cloud.tools:appengine-gradle-plugin:2.2.0")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72")
     }
 }
@@ -36,7 +36,7 @@ dependencies {
 
 configure<com.google.cloud.tools.gradle.appengine.standard.AppEngineStandardExtension> {
     tools {
-        setCloudSdkHome("/home/martin/google-cloud-sdk")
+        setCloudSdkHome("/Users/m.bonnin/dev/google-cloud-sdk")
     }
     deploy {
         projectId = "api-8968624424481748993-986289"
