@@ -15,7 +15,9 @@ Everything should largely fit in the free tier except for Google Translate that 
 ## Configuration
 
 * install the google cloud SDK and edit its location in build.gradle
-* create a Google Cloud Project
+* log your google cloud project account gcloud cli
+* create app engine (gcloud app create)
+* activer google cloud build api
 * enable billing for outbound requests to work
 * enable the Google Translate API
 * link the project to your Google Play account

@@ -2,7 +2,6 @@ package net.mbonnin.appengine
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-import java.lang.Exception
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -162,7 +161,7 @@ object Itunes {
     }
 
     fun getReviews(appId: String, country: String): List<Review>? {
-        val itunesUrl = "https://itunes.apple.com/${country.toLowerCase()}/rss/customerreviews/id=${appId}/sortBy=mostRecent/json"
+        val itunesUrl = "https://itunes.apple.com/${country.lowercase()}/rss/customerreviews/id=${appId}/sortBy=mostRecent/json"
         val url = URL(itunesUrl)
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
@@ -191,10 +190,6 @@ object Itunes {
                 println("no entry for $country")
                 return null
             }
-            val language = when(country) {
-                "US", "GB" -> "en_${country.toLowerCase()}"
-                else -> "zz_${country.toLowerCase()}" // use zz for language and hope google translate can do the magic
-            }
             return entry.map {
                 Review(
                         author = it.getObject("author").getObject("name").getString("label"),
@@ -203,7 +198,7 @@ object Itunes {
                         title = it.getObject("title").getString("label"),
                         content = it.getObject("content").getString("label"),
                         id = it.getObject("id").getString("label").toLong(),
-                        language = language
+                        language = country.lowercase()
                 )
             }
         } catch (e: Exception) {

@@ -3,19 +3,19 @@ package net.mbonnin.appengine
 import com.google.cloud.translate.Translate
 import com.google.cloud.translate.TranslateOptions
 import org.apache.commons.lang3.StringEscapeUtils
-import java.lang.Exception
-import java.net.URLEncoder
 
+enum class OS {
+    ANDROID, IOS
+}
 class SlackMessageBuilder(val starRating: Int,
+                          val os: OS,
                           val language: String? = null, // in the form en_us
                           val userName: String?,
                           val appVersion: String?,
                           val apiLevel: Int? = null,
                           val device: String? = null,
                           val originalText: String,
-                          val seconds: Long,
-                          val accessToken: String? = null,
-                          val channel: String) {
+                          val seconds: Long) {
 
     private fun username(): String {
         if (!userName.isNullOrBlank()) {
@@ -26,6 +26,11 @@ class SlackMessageBuilder(val starRating: Int,
     }
     private fun text(): String {
         val list = mutableListOf<String>()
+        val os = when(os) {
+            OS.ANDROID -> ":android:"
+            OS.IOS -> ":apple:"
+        }
+        list.add(os)
         list.add("${stars()} ${flag()} ${username()}")
         if (appVersion != null) {
             list.add("_version_: $appVersion")
@@ -44,11 +49,9 @@ class SlackMessageBuilder(val starRating: Int,
     }
 
     private fun flag(): String {
-        return try {
-            ":flag-${language!!.split("_")[1].toLowerCase()}:"
-        } catch (e:Exception) {
-            language ?: ""
-        }
+        return language?.let {
+            ":flag-${it.lowercase()}:"
+        } ?: ""
     }
 
     private fun color(): String {
@@ -66,7 +69,7 @@ class SlackMessageBuilder(val starRating: Int,
 
         val attachments = mutableListOf<Map<String, String>>()
 
-        if (language?.startsWith("en") == false) {
+        if (language?.contains("fr", ignoreCase = true) == false) {
             val translatedText = translatedText()
             if (translatedText != null) {
                 attachments.add(
@@ -83,19 +86,16 @@ class SlackMessageBuilder(val starRating: Int,
 
         return mapOf(
                 "text" to text(),
-                "channel" to channel,
                 "attachments" to attachments,
-                "icon_emoji" to ":hedgehog:",
-                "username" to "ReviewBot"
         )
     }
 
     private fun translatedText(): String? {
-        val translate = TranslateOptions.getDefaultInstance().getService()
+        val translate = TranslateOptions.getDefaultInstance().service
 
         val translation = translate.translate(
                 originalText,
-                Translate.TranslateOption.targetLanguage("en"))
+                Translate.TranslateOption.targetLanguage("fr"))
 
         return StringEscapeUtils.unescapeHtml4(translation.translatedText)
     }
