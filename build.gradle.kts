@@ -37,7 +37,7 @@ dependencies {
 
 configure<com.google.cloud.tools.gradle.appengine.standard.AppEngineStandardExtension> {
     deploy {
-        projectId = "appreviewslack"
+        projectId = "app-engine-google-project-id"
         version = "GCLOUD_CONFIG"
         stopPreviousVersion = true
         promote = true
