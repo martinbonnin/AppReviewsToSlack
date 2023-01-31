@@ -2,7 +2,8 @@ package net.mbonnin.appengine
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-import okio.Okio
+import okio.buffer
+import okio.sink
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -22,7 +23,7 @@ object Slack {
         connection.doOutput = true
 
         connection.addRequestProperty("Content-Type", "application/json")
-        val sink = Okio.buffer(Okio.sink(connection.getOutputStream()))
+        val sink = connection.outputStream.sink().buffer()
         sink.use {
             mapAdapter.toJson(it, map)
             sink.flush()
@@ -30,10 +31,10 @@ object Slack {
 
         val status = connection.responseCode
         if (status != HttpURLConnection.HTTP_OK) {
-            val response = connection.getInputStream().bufferedReader().use {
+            val response = connection.inputStream.bufferedReader().use {
                 it.readText()
             }
-            System.out.println("cannot send to slack: $response")
+            println("cannot send to slack: $response")
         }
     }
 }

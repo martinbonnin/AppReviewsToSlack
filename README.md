@@ -14,13 +14,11 @@ Everything should largely fit in the free tier except for Google Translate that 
 
 ## Configuration
 
-* install the google cloud SDK and edit its location in build.gradle
-* create a Google Cloud Project
+* Install the Google Cloud SDK
+* configure projectId in build.gradle with the Id of your Google Cloud Console project
 * enable billing for outbound requests to work
-* enable the Google Translate API
-* link the project to your Google Play account
-* create a service account and give it permission on your app in the play console
-* create a key for your service account in the Google cloud console
+* create a service account for your Google Play account and give it permission on your app in the
+  play console
 * put this key as a resource named secret.json
 * create a resource named config.json with your app packageName and slack incoming webhook
 * ./gradlew appengineDeploy

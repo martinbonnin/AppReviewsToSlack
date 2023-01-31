@@ -1,5 +1,5 @@
 {
-  "packageName": "com.company.app",
-  "incomingWebHook": "https://hooks.slack.com/services/SOME_STUFF",
-  "itunesAppId": "12345"
+   "packageName": "com.company.app",
+   "incomingWebHook": "https://hooks.slack.com/services/SOME_STUFF",
+   "itunesAppId": "12345",
 }
