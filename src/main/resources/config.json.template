@@ -1,0 +1,5 @@
+{
+   "incomingWebHook": "https://hooks.slack.com/services/SOME_STUFF",
+   "itunesAppId": "12345",
+   "googleAppEngineProjectId": "api-1234345"
+}
