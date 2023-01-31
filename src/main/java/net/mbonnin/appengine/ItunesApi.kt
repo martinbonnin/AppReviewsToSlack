@@ -5,7 +5,7 @@ import com.squareup.moshi.Types
 import java.net.HttpURLConnection
 import java.net.URL
 
-object Itunes {
+object ItunesApi {
     data class Review(val author: String,
                       val version: String,
                       val rating: String,
@@ -151,7 +151,7 @@ object Itunes {
         val list = mutableListOf<Review>()
 
         for (country in countries) {
-            Itunes.getReviews(appId, country)?.let { list.addAll(it) }
+            ItunesApi.getReviews(appId, country)?.let { list.addAll(it) }
         }
         return if (list.size > 50) {
             list.sortedBy { it.id }.takeLast(50)

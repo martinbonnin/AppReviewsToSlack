@@ -55,7 +55,7 @@ class MainServlet : HttpServlet() {
 
         // resp is optional so we can run this in unit tests
         internal fun sendApple(resp: HttpServletResponse?, itunesAppId: String, incomingWebHook: String) {
-            val reviews = Itunes.getReviews(itunesAppId) ?: throw (Exception("Cannot get apple reviews"))
+            val reviews = ItunesApi.getReviews(itunesAppId) ?: throw (Exception("Cannot get apple reviews"))
 
             val lastId = try {
                 DataStore.readSeconds(KEY_APPLE) ?: 0L
@@ -152,7 +152,7 @@ fun com.google.api.services.androidpublisher.model.Review.toSlackMessage() : Map
     }
 }
 
-fun Itunes.Review.toSlackMessage(): Map<String, Any> {
+fun ItunesApi.Review.toSlackMessage(): Map<String, Any> {
     return SlackMessageBuilder(
         starRating = rating.toInt(),
         os = OS.IOS,
